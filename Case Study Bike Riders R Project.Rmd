@@ -1,0 +1,451 @@
+---
+title: 'Case Study: Bike Riders'
+author: "Deontae Hardnett"
+date: "6/13/2023"
+output: html_document
+---
+
+#Loading the correct packages
+```{r}
+remove.packages(pkgs = "rlang")
+install.packages("rlang")
+library(rlang)
+install.packages("dplyr")
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(MASS)
+library(lubridate)
+##The packages aren't running right now. Going to try to uninstall and re-install the rlang package to see if that works.
+```
+
+
+
+#Downloading the trip data
+```{r}
+q1_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\Divvy_Trips_2020_Q1\\Divvy_Trips_2020_Q1.csv")
+
+april_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\202004-divvy-tripdata (1)\\202004-divvy-tripdata.csv")
+
+may_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\202005-divvy-tripdata\\202005-divvy-tripdata.csv")
+
+june_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\202006-divvy-tripdata\\202006-divvy-tripdata.csv")
+
+
+july_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\202007-divvy-tripdata (1)\\202007-divvy-tripdata.csv")
+
+
+august_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\202008-divvy-tripdata (1)\\202008-divvy-tripdata.csv")
+
+
+september_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\202009-divvy-tripdata (1)\\202009-divvy-tripdata.csv")
+
+
+october_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\202010-divvy-tripdata (2)\\202010-divvy-tripdata.csv")
+
+
+november_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\202011-divvy-tripdata (2)\\202011-divvy-tripdata.csv")
+
+
+december_trip_data <- read.csv("C:\\Users\\dhard\\Downloads\\202012-divvy-tripdata (2)\\202012-divvy-tripdata.csv")
+
+```
+
+
+
+#Cleaning out data for each dataset. I used the complete.cases function in R to clean out the data.
+
+```{r}
+cleaned_q1_trip_data <- q1_trip_data[complete.cases(q1_trip_data),]
+
+cleaned_april_trip_data <- april_trip_data[complete.cases(april_trip_data),]
+
+cleaned_may_trip_data <- may_trip_data[complete.cases(may_trip_data),]
+
+cleaned_june_trip_data <- june_trip_data[complete.cases(june_trip_data),]
+
+cleaned_july_trip_data <- july_trip_data[complete.cases(july_trip_data),]
+
+cleaned_august_trip_data <- august_trip_data[complete.cases(august_trip_data),]
+
+cleaned_september_trip_data <- september_trip_data[complete.cases(september_trip_data),]
+
+cleaned_october_trip_data <- october_trip_data[complete.cases(october_trip_data),]
+
+cleaned_november_trip_data <- november_trip_data[complete.cases(november_trip_data),]
+
+cleaned_december_trip_data <- december_trip_data[complete.cases(december_trip_data),]
+```
+
+
+
+#We're now going to add a column that has the time difference (in seconds). Afterwards we're going to create some visualizations using the GGPLOT2 package ot find trends in the data for the Q1 data.
+
+```{r}
+cleaned_q1_trip_data <- cleaned_q1_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_april_trip_data <- cleaned_april_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_may_trip_data <- cleaned_may_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_june_trip_data <- cleaned_june_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_july_trip_data <- cleaned_july_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_august_trip_data <- cleaned_august_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_september_trip_data <- cleaned_september_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_october_trip_data <- cleaned_october_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_november_trip_data <- cleaned_november_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_december_trip_data <- cleaned_december_trip_data %>% mutate(time_spent_on_bike=difftime(time1 = ended_at, time2 = started_at, units = "secs"))
+
+cleaned_q1_trip_data
+
+```
+
+
+
+##It is time to try and see if we can create some plots. Let's create some histogram to look at the trends in time spent on bike with the casual users and the members.
+```{r}
+#We need to convert the time_spent_on_bike data type from time to a number using the as.numeric() function.
+cleaned_q1_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_q1_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_april_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_april_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_may_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_may_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_june_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_june_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_july_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_july_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_august_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_august_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_september_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_september_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_october_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_october_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_november_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_november_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_december_trip_data$time_spent_on_bike <- as.numeric(substr(cleaned_december_trip_data$time_spent_on_bike,start = 1, stop = 4))
+
+cleaned_q1_trip_data
+
+```
+
+
+##Let's get some summary statistics on the ride times of the two memberships.
+```{r}
+summary(object = cleaned_q1_trip_data$time_spent_on_bike)
+
+#We see that the minimum time spent on the bike is -552 seconds. We know that there are no negative times in real life, we will check and see if there are any other negative times.
+
+negative_time_data <- cleaned_q1_trip_data[cleaned_q1_trip_data$time_spent_on_bike <= 0,]
+
+negative_time_data
+
+##I have found that there are 116 rows that have 0 or negative time values and that's due to the fact that the times have been switched. So I'm going to first swap the columns in the negative time data using the select function and then I'm going to change the column names.
+
+cleaned_negative_data <- negative_time_data[c("ride_id", "rideable_type","ended_at","started_at", "start_station_name","start_station_id", "end_station_name", "end_station_id", "start_lat", "start_lng", "end_lat", "end_lng", "member_casual", "time_spent_on_bike")]
+
+#Change the name of the column names to confirm the switch.
+cleaned_negative_data <- cleaned_negative_data %>% rename(ended_at = started_at, started_at=ended_at)
+
+
+#Finally, multiply the last column by negative 1 to get positive time spent values.
+
+cleaned_negative_data$time_spent_on_bike <- -cleaned_negative_data$time_spent_on_bike
+
+#Now we have cleaned up the negative time values.
+cleaned_negative_data
+
+summary(cleaned_april_trip_data$time_spent_on_bike)
+
+```
+
+
+##Now we are going to remove the negative time values from the old dataset and attach the data with the corrected values onto the dataset.
+```{r}
+#Removed the data with the negative time values.
+
+cleaned_q1_trip_data
+cleaned_q1_trip_data <- cleaned_q1_trip_data[-cleaned_q1_trip_data$time_spent_on_bike <= 0,]
+
+#Going to add the data with the corrected time values.
+cleaned_q1_trip_data <- rbind(cleaned_q1_trip_data, cleaned_negative_data)
+
+#This confirms that the data has been cleaned.
+summary(cleaned_q1_trip_data$time_spent_on_bike)
+
+#Last thing. Let's rearrange the data and order by time.
+
+
+cleaned_q1_trip_data <- arrange(.data = cleaned_q1_trip_data, started_at)
+
+#Now our Q1 data is clean.
+cleaned_q1_trip_data
+```
+
+
+##Onto the May Trip Data.
+```{r}
+##Now we are going to perform the same tasks with our other data. First let's run a summary to make sure we don't encounter the same errors.
+summary(cleaned_may_trip_data$time_spent_on_bike)
+
+summary(cleaned_june_trip_data$time_spent_on_bike)
+
+summary(cleaned_july_trip_data$time_spent_on_bike)
+
+summary(cleaned_august_trip_data$time_spent_on_bike)
+
+summary(cleaned_september_trip_data$time_spent_on_bike)
+
+summary(cleaned_october_trip_data$time_spent_on_bike)
+
+summary(cleaned_november_trip_data$time_spent_on_bike)
+
+summary(cleaned_december_trip_data$time_spent_on_bike)
+
+
+#All of them have negative time values. This may be a good time to export the data to Excel and run a Macro.
+```
+
+#Getting a list of the datasets.
+
+
+```{r}
+data_list <- list(cleaned_q1_trip_data, cleaned_april_trip_data, cleaned_may_trip_data, cleaned_june_trip_data, cleaned_july_trip_data, cleaned_august_trip_data, cleaned_september_trip_data, cleaned_october_trip_data, cleaned_november_trip_data, cleaned_december_trip_data)
+```
+
+
+```{r}
+install.packages("openxlsx")
+library(openxlsx)
+```
+
+#Writing the datasets into Excel.
+```{r}
+write.xlsx(cleaned_q1_trip_data,"C:\\Users\\dhard\\Downloads")
+
+for (i in 1:length(data_list)){
+  write.xlsx(data_list[i],"C:\\Users\\dhard\\Downloads")
+}
+
+
+cleaned_june_trip_data
+
+is.data.frame(cleaned_june_trip_data)
+```
+
+
+#Creating a function to clean up all of the datasets.
+```{r}
+clean_data_fun <- function(df) {
+  #Selecting the rows with the negative data.
+negative_time_data <- df[df$time_spent_on_bike <= 0,]
+
+#Switching the columns names around.
+
+cleaned_negative_data <- negative_time_data[c("ride_id", "rideable_type","ended_at","started_at", "start_station_name","start_station_id", "end_station_name", "end_station_id", "start_lat", "start_lng", "end_lat", "end_lng", "member_casual", "time_spent_on_bike")]
+
+#Change the name of the column names to confirm the switch.
+cleaned_negative_data <- cleaned_negative_data %>% rename(ended_at = started_at, started_at=ended_at)
+
+#Multiplying the column by negative one to get positive times.
+cleaned_negative_data$time_spent_on_bike <- -cleaned_negative_data$time_spent_on_bike
+
+
+#Removing rows with negative time values from original dataset.
+df <- df[-df$time_spent_on_bike <= 0,]
+
+#Arranges the data by the started_at time.
+df <- rbind(df, cleaned_negative_data) %>% arrange(by = started_at)
+
+df
+}
+
+```
+
+
+
+```{r}
+summary(cleaned_april_trip_data$time_spent_on_bike)
+```
+
+
+
+```{r}
+#Time to use this function on all of the datasets.
+
+new_april_trip_data <- clean_data_fun(cleaned_april_trip_data)
+
+new_may_trip_data <- clean_data_fun(cleaned_may_trip_data)
+
+new_june_trip_data <- clean_data_fun(cleaned_june_trip_data)
+
+new_july_trip_data <- clean_data_fun(cleaned_july_trip_data)
+
+new_august_trip_data <- clean_data_fun(cleaned_august_trip_data)
+
+new_september_trip_data <- clean_data_fun(cleaned_september_trip_data)
+
+new_october_trip_data <- clean_data_fun(cleaned_october_trip_data)
+
+new_november_trip_data <- clean_data_fun(cleaned_november_trip_data)
+
+new_december_trip_data <- clean_data_fun(cleaned_december_trip_data)
+```
+
+
+
+#Confirming that the function works on all of the datasets.
+```{r}
+summary(new_april_trip_data$time_spent_on_bike)
+
+summary(new_may_trip_data$time_spent_on_bike)
+
+summary(new_june_trip_data$time_spent_on_bike)
+
+summary(new_july_trip_data$time_spent_on_bike)
+
+summary(new_august_trip_data$time_spent_on_bike)
+
+summary(new_september_trip_data$time_spent_on_bike)
+
+summary(new_october_trip_data$time_spent_on_bike)
+
+summary(new_november_trip_data$time_spent_on_bike)
+
+summary(new_december_trip_data$time_spent_on_bike)
+```
+#Now we have all of the datasets clean. Time to start answering questions.
+```{r}
+#Going to combine the data.
+
+bike_trip_data_2020 <- rbind(cleaned_q1_trip_data,new_april_trip_data, new_may_trip_data,new_june_trip_data,new_july_trip_data,new_august_trip_data,new_september_trip_data, new_october_trip_data,new_november_trip_data,new_december_trip_data)
+```
+
+```{r}
+bike_trip_data_2020
+```
+
+
+#Getting the summary statistics for both member groups.
+```{r}
+#Summary Statistics for the ride times for both groups.
+
+casual_data <- bike_trip_data_2020[bike_trip_data_2020$member_casual=="casual",]
+  
+member_data <- bike_trip_data_2020[bike_trip_data_2020$member_casual=="member",]
+
+summary(casual_data$time_spent_on_bike)
+
+summary(member_data$time_spent_on_bike)
+
+#We see that there are mass differences in the summary statistics between the casual riders and the members. We see that the casual members spend much more time on the bikes than the members.
+```
+
+#Create bar graphs to count the number of membership types spent on the bike between the casual and members.
+```{r}
+
+g <- ggplot(bike_trip_data_2020, aes(member_casual, color = member_casual
+                                     ))
+
+g + geom_bar()
+##We see that the majority of the members that used the bikes in 2020 were members.
+```
+
+
+```{r}
+new_november_trip_data %>% arrange(desc(started_at))
+
+
+new_december_trip_data
+
+
+new_december_trip_data[complete.cases(new_december_trip_data),]
+```
+
+
+```{r}
+day_of_week <- wday(as.Date(bike_trip_data_2020$started_at), label=TRUE, abbr=FALSE)
+bike_trip_data_2020$day_of_week <- day_of_week
+```
+
+
+```{r}
+bike_trip_data_2020
+```
+```{r}
+unique(bike_trip_data_2020$rideable_type)
+```
+
+
+
+```{r}
+
+#Cleaning up the dirty data.
+wrong_data <- bike_trip_data_2020[as.Date(bike_trip_data_2020$started_at)=="2020-11-25" & as.Date(bike_trip_data_2020$ended_at) == "2020-12-15",]
+```
+
+
+```{r}
+new_bike_trip_data_2020 <- bike_trip_data_2020 %>% filter(!(as.Date(bike_trip_data_2020$started_at)=="2020-11-25" & as.Date(bike_trip_data_2020$ended_at) == "2020-12-15"))
+```
+
+
+
+```{r}
+#We see that people spend the most time on their bikes on Saturday and Sunday, on average.
+new_bike_trip_data_2020 %>% group_by(day_of_week, member_casual) %>% summarize(avg_time = mean(time_spent_on_bike))
+```
+
+#Our goal is to try and convert casual riders to members. We're going to analyze the trends for the casual riders over the course of a year.
+```{r}
+casual_trend_graph <- new_bike_trip_data_2020 %>% filter(member_casual == "casual") %>% group_by(month=month(x = as.Date(started_at), label = TRUE, abbr = T)) %>% summarize(total=n()) %>% ggplot(aes(x=month, y=total, group=1, color=month)) +
+  geom_point() + geom_line()
+
+casual_trend_graph + ggtitle(label = "Total bike rides by month in 2020",subtitle = "Created by Deontae Hardnett, Group: Casual riders")
+
+
+##We see that the casual bikers' usage peak during the summer months July and August before it declines. Now we are going to see how many time they take use the bikes for during these months.
+
+```
+
+```{r}
+new_bike_trip_data_2020 %>% filter(member_casual == "casual") %>% group_by(month=month(x = as.Date(started_at), label = TRUE, abbr = T)) %>% summarize(average_time=mean(time_spent_on_bike)) %>% ggplot(aes(x=month, y=average_time, group=1, color= month)) +
+  geom_point() + geom_line() + ggtitle(label = "Average time spent on bikes for casual users in 2020",subtitle = "Group: Casual")
+
+
+##We see that the casual bike riders spend the most time on the bike in May and July. It seems that July has a high usage rate in terms of volume of users and time spent on the bike. Our best bet would be to try and gain more members during the month of May, since based on the first graph above we start to rise in the number of users during that time.
+
+#I think a good strategy to bring in more subscribers would be to start giving the casual subscribers a 1 week trial (let's say give them a 10 minute limit on the bike.) during the month of May and then afterwards start to charge them the regular fee
+```
+#Now we're looking at the trends for the users that hold memberships for Cyclistic
+```{r}
+member_trend_graph <- new_bike_trip_data_2020 %>% filter(member_casual == "member") %>% group_by(month=month(x = as.Date(started_at), label = TRUE, abbr = T)) %>% summarize(total=n()) %>% ggplot(aes(x=month, y=total,color = month, group=1)) +
+  geom_point() + geom_line()
+
+member_trend_graph + ggtitle(label = "Total bike rides by month in 2020",subtitle = "Group: Members")
+```
+
+
+
+#We're now going to look at the average amount of time that the Cyclistic subscribers are spending on the bike. We're grouping the times by month.
+```{r}
+new_bike_trip_data_2020 %>% filter(member_casual == "member") %>% group_by(month=month(x = as.Date(started_at), label = TRUE, abbr = T)) %>% summarize(avg_time=mean(time_spent_on_bike))
+```
+
+```{r}
+new_bike_trip_data_2020 %>% filter(member_casual == "member") %>% group_by(month=month(x = as.Date(started_at), label = TRUE, abbr = T)) %>% summarize(average_time=mean(time_spent_on_bike)) %>% ggplot(aes(x=month, y=average_time, color = month)) +
+  geom_point() + geom_area() + ggtitle(label = "Average time spent on bikes for Cyclistic subscribers in 2020",subtitle = "Group: Member")
+```
+
+
+```{r}
+#Summary: We see that the members and the casual users used the bikes at similar times throughout the year. The best way to convert our casual users to members would be to increase advertisement and drop the prices initially (just as a wait and see approach) to see if the casual users get converted to members.
+```
+
+
