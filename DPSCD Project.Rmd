@@ -1,0 +1,172 @@
+---
+title: "DPSCD Performance Data Analyst Project"
+author: "Deontae Hardnett"
+date: "11/1/2023"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+##Installing packages
+library(tidyverse)
+install.packages("sqldf")
+library(sqldf)
+library(ggplot2)
+library(dplyr)
+library(readxl) # Need this package to load the data with the xlsx file type.
+#Loading the data
+student.level <- read_xlsx(path = "C:\\Users\\dhard\\Downloads\\StudentLevelData.xlsx") #Before loading this data into RStudio, I did change the School Year into Semesters for Fall 2022 and Spring 2023, since the year hypothetically ended in 2023.
+
+teacher.student.data <- read_xlsx("C:\\Users\\dhard\\Downloads\\TeacherStudentRosters.xlsx")
+
+teacher.observation.data <- read_xlsx("C:\\Users\\dhard\\Downloads\\TeacherObservationRatings.xlsx")
+```
+
+
+```{r}
+#Inspecting our student level data
+str(student.level)
+
+#Going to remove the original pretest window and post-test window, along with unnecessary columns.
+
+student.level <- student.level[,-c(2,7,11,19)]
+
+student.level
+
+#Changing the name of the columns
+colnames(student.level)[1] <- "PreTest Window"
+colnames(student.level)[16] <- "PostTestWindow"
+
+#Final Student Level Data Set
+student.level
+
+#Counting the number of missing values in the dataset.
+sum(is.na(student.level)) #No missing values
+
+```
+##Question 1
+```{r}
+##Question 1. How can student-level data be attributed to teachers? How should these results be summarized for each teacher?
+
+#First, we're going to make sure that we only have the students that are enrolled with their respective teachers during the Fall and the Spring. So we're going to "slice" the Student-Teacher data based on that criteria.
+
+cleaned.teacher.student.data <- teacher.student.data %>% filter(`Enrolled Fall`=="Yes" & `Enrolled Spring`== "Yes")
+
+dim(cleaned.teacher.student.data)[1] #Takes the row dimension of the new dataset
+#to count number of students that were registered both in Fall and Spring.
+
+#We had 47,556 students in total but 44,961 of them were registered for both Fall 2022 and Spring 2023.
+
+#Now we can join the student-level data with the teacher student level data.
+
+joined_data <- left_join(x = cleaned.teacher.student.data,y = student.level, by = c("Student ID"))
+
+
+joined_data
+
+sum(is.na(joined_data)) # No NAs on this one.
+
+##Make sure that our teachers are credited for the course that they actually taught, (i.e. Reading teachers get credited with reading improvements, Math Teachers get credited with math scores.)
+
+#Make sure we have no teachers more than one subject.
+unique(joined_data$Subject.x)
+
+joined_data %>% select(`Teacher ID`, Subject.x) %>% filter(Subject.x == "Math" & Subject.x == "ELA") #We get 0 rows with this data. So this means no teachers are teaching more than 1 subject.
+
+#Math Teachers
+math.teacher.data <- joined_data %>% filter(Subject.x == "Math" & `Test Name` == "i-Ready Math")
+
+#ELA Teachers
+ela.teacher.data <- joined_data %>% filter(Subject.x == "ELA" & `Test Name` == "i-Ready Reading")
+
+
+#Now combining the teachers data.
+
+new.teacher.student.data <- rbind(math.teacher.data,ela.teacher.data)
+
+new.teacher.student.data
+
+#Now it's time to take the joined data and summarize them by the improvements in scores for their respective subjects.
+
+improvement.by.teacher <- new.teacher.student.data %>% group_by(`Teacher ID`) %>% summarise(avg_improvement=mean(`Actual Growth`), standard_deviation=sd(`Actual Growth`))
+
+improvement.by.teacher
+
+ #We were able to attribute the student-level data to each teacher by going with the improvement of the students' scores with respect to the subjects that the teachers taught and the respective i-Ready scores.
+
+```
+
+##Question 2
+```{r}
+# Question 2. How can the effectiveness ratings for each teacher be calculated using students' academic improvements? How should differences between observation and effectiveness ratings be reconciled?
+
+#Right joining the teacher data with the average student improvement data by the Teacher Number and Teacher ID.
+
+#First change the name of the  column in the teacher observation data over to Teacher ID. We do this to make the right join process easier.
+
+
+colnames(teacher.observation.data)[1] <- "Teacher ID"
+
+
+#Finally to calculate the effectiveness ratings, we can turn the "Growth Target Met" data into a categorical data of 0 or 1. 1 if Yes, 0 if No. Finally, we can scale it from 0 to 100 to account for the number of students each teacher has.
+
+#First turning the Growth Target data into 0's or 1's.
+new.teacher.student.data$`Growth Target Met` <- ifelse(test = new.teacher.student.data$`Growth Target Met`== "Yes",1,0)
+
+
+new.teacher.student.data
+
+#Mutate the effectiveness rating onto the improvement.by.teacher dataset you create.
+
+improvement.by.teacher.2 <- new.teacher.student.data %>% group_by(`Teacher ID`) %>% summarise(avg_improvement=round(mean(`Actual Growth`),2), standard_deviation=round(sd(`Actual Growth`),2), effectiveness_rating=round((sum(`Growth Target Met`)/n())*100,2))
+
+
+
+
+#Right join the improvement data on the Teacher ID.
+improvement.by.teacher.2 <- right_join(x = teacher.observation.data, y = improvement.by.teacher.2)
+
+
+improvement.by.teacher.2
+
+#We can reconcile the differences between the effectiveness rating and the observation ratings by recognizing the difference as the administrator's under or overestimation of the teacher's effectiveness. First we will have to scale the End of Year observation score from the highest score possible to 100.
+
+#If Effectiveness Rating - EOY is positive, it means that the teacher is underestimated. If the score is negative, that the teacher has been overestimated.
+
+#Finding the Max Score a teacher can get.
+
+max(improvement.by.teacher.2$`EOY Observation Score`) #The max score that was achieved by the administrator was 45, so we'll assume that 45 is the best score one can get.
+
+#Now we are going to get the estimation of the administrator's scores by adding the variable called admin_estimate.
+
+#Scaled EOY Score: (EOY Score/45)*100
+
+#Adding the new varialbe to the improvement.by.teacher.2.
+
+improvement.by.teacher.2 <- improvement.by.teacher.2 %>% mutate(admin_estimate=round(effectiveness_rating-((`EOY Observation Score`)/45)*100,2))
+
+#Lastly we are going ot change the admin_estimate to either underestimate or overestimate.
+
+improvement.by.teacher.2$admin_estimate <- ifelse(test = improvement.by.teacher.2$admin_estimate < 0, "Overestimated","Underestimated")
+
+improvement.by.teacher.2
+```
+##Question 3
+```{r}
+#Is there a correlation between effectiveness ratings and observation ratings? What insights can be drawn from this analysis?
+
+#To visualize the correlation, we are going to use a ggplot and plot the effectiveness and the scaled observation ratings.
+
+ggplot(data = improvement.by.teacher.2,mapping = aes(x = effectiveness_rating, y = (`EOY Observation Score`/45)*100)) + geom_point() + ggtitle(label = "Correlation between Admin Observation and Overall Effectiveness.") + labs(x = "Effective_Rating", y = "Scaled_Admin_Observation")
+
+#Now we are going to calculate the correlation between the observation and the effectiveness rating.
+
+cor(improvement.by.teacher.2$effectiveness_rating, improvement.by.teacher.2$`EOY Observation Score`)
+
+#There is a positive correlation of .362 between the effectiveness rating and the administrator's observational score, but it's not that strong a positive correlation.
+```
+```{r}
+#Recommendations: I would recommend that we include student's evaluations as well. Also when it comes to the beginning of the year, we should have the i-Ready scores for students data from the Spring of the previous Semester and the i-Ready scores for the Fall Semester. I think it's good that we compare those scores as well so that we make sure that our students are actually retaining the information from the previous year.
+```
+
