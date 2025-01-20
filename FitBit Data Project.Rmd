@@ -1,0 +1,160 @@
+---
+title: "Daily Wellness Project"
+author: "Deontae Hardnett"
+date: "8/16/2023"
+output: html_document
+---
+
+```{r}
+##Loading the correct packages
+library(tidyr)
+library(ggplot2)
+library(tidyverse)
+library(datasets)
+library(lubridate)
+
+
+daily_calories <- read.csv("C:\\Users\\dhard\\Downloads\\dailyCalories_merged.csv")
+
+##Downloading the data for daily usage of the devices.
+daily_intensity <- read.csv(file = "C:\\Users\\dhard\\Downloads\\dailyIntensities_merged.csv")
+
+daily_activity <- read.csv(file = "C:\\Users\\dhard\\Downloads\\dailyActivity_merged.csv")
+
+daily_steps <- read.csv(file = "C:\\Users\\dhard\\Downloads\\dailySteps_merged.csv")
+
+daily_sleep <- read.csv(file = "C:\\Users\\dhard\\Downloads\\sleepDay_merged.csv" )
+
+#Data source: https://www.kaggle.com/datasets/arashnic/fitbit
+#The data was collected from 30 eligible users of Fitbit by way of a survey. The survey was distrbiuted by Amazon Mechanical Turk.
+```
+
+```{r}
+##Let's make sure that the data is clean (i.e., no NAs, empty spots, nonsense data, etc.)
+
+sum(is.na(daily_activity)) # No NAs
+sum(is.na(daily_activity)) # No NAs
+sum(is.na(daily_activity)) # No NAs
+
+
+#Now let's check the structure of the datasets.
+
+str(daily_activity)
+str(daily_intensity)
+str(daily_steps)
+str(daily_sleep)
+
+
+#We can change the date columns into actual date data types instead of characters. Let's try it.
+
+
+
+daily_calories$ActivityDay<- as_date(x = daily_calories$ActivityDay)
+
+daily_activity$ActivityDate <- as_date(x = daily_activity$ActivityDate)
+
+daily_steps$ActivityDay <- as_date(x = daily_steps$ActivityDay)
+
+daily_intensity$ActivityDay <- as_date(x = daily_intensity$ActivityDay)
+
+daily_sleep$SleepDay <- as_date(x = daily_sleep$SleepDay)
+
+
+daily_sleep
+
+#Since we are analyzing this data daily, we must include the days also.
+
+
+daily_intensity$WeekDay <- wday(x = daily_intensity$ActivityDay, label = T , abbr = T)
+
+
+daily_calories$WeekDay <- wday(daily_calories$ActivityDay)
+
+
+daily_steps$WeekDay <- wday(daily_steps$ActivityDay)
+
+daily_activity$WeekDay <- wday(daily_activity$ActivityDate)
+
+
+daily_intensity
+
+
+daily_sleep
+```
+
+
+```{r}
+daily_calories
+
+daily_intensity
+
+#I'm just joining the tables for the daily data. 
+
+daily_data <- daily_intensity %>% select(Id,ActivityDay, WeekDay, SedentaryMinutes, VeryActiveMinutes, VeryActiveDistance) %>% cbind(daily_calories$Calories, daily_steps$StepTotal)
+
+#I'm going to write this dataset into Excel.
+
+library(writexl)
+```
+
+```{r}
+##Changing some column names first, then gathering summary statistics.
+
+colnames(daily_data)[7] <- "Calories"
+colnames(daily_data)[8] <- "StepTotal"
+
+daily_data
+daily_sleep
+
+#Now gathering summary statistics for the measurables.
+daily_data_summary_stat <- daily_data %>% group_by(WeekDay) %>% summarise(avg_calories=mean(Calories), avg_steps=mean(StepTotal), avg_active_minutes=mean(VeryActiveMinutes), avg_sed_minutes=mean(SedentaryMinutes), avg_active_dist=mean(VeryActiveDistance))
+
+daily_data_summary_stat
+```
+
+```{r}
+#Rewriting the colname for SleepDay to change the name of the column.
+colnames(x = daily_sleep)[2] <- "ActivityDate"
+
+daily_sleep
+
+all_daily_data <- merge(x = daily_data, daily_sleep, by = c("Id","ActivityDate"))
+
+all_daily_data
+```
+
+```{r}
+#Now we are going to we're going to look at the difference in TotalMinutes Asleep and the TotalTimeInBed variables and create a new variable called Difference_in_Bed_and_Sleep_Time.
+
+all_daily_data_2 <- all_daily_data %>% mutate(bed_time_difference=TotalTimeInBed-TotalMinutesAsleep)
+
+
+#We're only going to look at average of number steps, total active minutes, sedentaryminutes, total minutes asleep, and bed_time_difference.
+summary_all_daily_data <- all_daily_data_2 %>% group_by(day=wday(x = WeekDay,label = T,abbr = T)) %>% summarise(avg_steps=mean(TotalSteps), avg_total_distance=mean(TotalDistance), avg_active_minutes=mean(FairlyActiveMinutes+LightlyActiveMinutes+VeryActiveMinutes), avg_minutes_asleep=mean(TotalMinutesAsleep))
+
+summary_all_daily_data
+#I'm showing that the people are most active on Saturday and they also get a little over 7 hours of sleep that day, which is the third most on throughout the week.
+```
+
+```{r}
+##Here's a graph of the daily average total distance vs. avg_minutes_asleep
+
+summary_all_daily_data %>% ggplot(aes(x = avg_minutes_asleep, y = avg_total_distance, shape= day, group=1)) + geom_line()
+
+#We see that the number of minutes that will optimize the amount of distance traveled, on average, is a little over 420 minutes of sleep, or 7 hours of sleep.
+```
+
+```{r}
+#The main weakness in this project is that there is not enough data on this project, since we only sampled 30 people and the survey went on from April to May.
+```
+
+
+```{r}
+#In terms of how the BellaBeat device can be used, we can always look at relationships in terms of the amount of sleep that one gets and how active they are. Another way that we can analyze the potential usage of the Time Bellabeat is how we can look at the averages of the measures of sleep, activity, and the average distance traveled during that month/week.
+```
+
+
+```{r}
+#A recommendation that can be made for the Time app is that it takes the average of the amount of the daily calories consumed, distance moved, sleep, and intensity for each month. That way, we can look at the monthly progress of women's health. We can also input a feature on the Time app such that women set goals for the amount of calories that she consumes per day, along with the activity levels and the amount. She should also be able to take summary statistics with those and create plots (either x and y plots or timeplots) to reveal her patterns in the calories, sleep, and activity statistics.
+```
+
